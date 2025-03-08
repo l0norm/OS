@@ -6,6 +6,9 @@ public class PCB {
     int priority;
     int memRequired;
 
+    int processWaitingTime;
+    int processTurnaroundTime;
+
 
     public PCB(PCB pcb){
         pcb.processID = processID;

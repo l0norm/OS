@@ -11,20 +11,19 @@ public class thread2 implements Runnable{
     ConcurrentLinkedQueue<PCB> readyQ; //to take a job from jobQueue wich has list of pcb
     ConcurrentLinkedQueue<PCB> jobQ;
     
-    public thread2(ConcurrentLinkedQueue<PCB> jobQ){
-        readyQ = new ConcurrentLinkedQueue<PCB>();
+    public thread2(ConcurrentLinkedQueue<PCB> jobQ, ConcurrentLinkedQueue<PCB> readyQ){
+        this.readyQ = readyQ;
         this.jobQ = jobQ;
     }
 
     public void run(){
         while(!jobQ.isEmpty()){
             PCB pcb = new PCB(jobQ.peek());
-            if (pcb.memRequired > this.memory){
-
-            }else{
+            if (pcb.memRequired <= this.memory){
                 jobQ.poll();
                 readyQ.add(pcb);
             }
+
         }
     }
 
