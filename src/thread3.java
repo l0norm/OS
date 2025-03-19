@@ -31,8 +31,6 @@ public class thread3 implements Runnable{
                 chart.append("+").append("-".repeat(pcb.burstTime));
                 processID.append("|").append(" ".repeat(pcb.burstTime));
                 burstTimeEnd.append(" ".repeat(pcb.burstTime)).append(totalBurstTime);
-
-
             }
         }else if(this.algType.equals("RR")){
             StringBuilder chart = new StringBuilder();

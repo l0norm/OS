@@ -1,33 +1,37 @@
-import java.io.*;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+public class main {
+    public static void main(String[] args) {
 
-public class thread1 implements Runnable {
     // reading from job.txt file 
     //creates PCB and put them in the job queue
 
 
     //the inputs will be [processID : burst time : priority ; memory required ]
 
-    
-    public static ConcurrentLinkedQueue<PCB> jobQ;
-    public thread1(){
-        jobQ = new ConcurrentLinkedQueue<>();
 
-    }
 
-    public void run(){
+        ConcurrentLinkedQueue<PCB> jobQ = new ConcurrentLinkedQueue<>();
+
+
+
 
         File obj = new File("null");
         Scanner reader = null;
         try{
 
             reader = new Scanner(obj);
+
+
+
+
+            
             while(reader.hasNextLine()){
                 String data = reader.nextLine();
-                int splitted[] = Arrays.stream(data.split(" "))
+                int splitted[] = Arrays.stream(data.split(":;"))
                                         .mapToInt(Integer::parseInt)
                                         .toArray();
 
@@ -43,8 +47,10 @@ public class thread1 implements Runnable {
             }
         }
 
+
+
+
+
+
     }
-    
-
-
 }
