@@ -21,15 +21,15 @@ public class ready implements Runnable{
         System.out.println("starting the thread");
 
         while(true){
-            main.flag[j] = true;
-            main.turn = i;
+            read.flag[j] = true;
+            read.turn = i;
 
           
-            if(main.jobQ.peek() != null){
-                PCB pcb = new PCB(main.jobQ.peek());
+            if(read.jobQ.peek() != null){
+                PCB pcb = new PCB(read.jobQ.peek());
                 if (pcb.memRequired <= this.memory){
-                    while(main.flag[i] && main.turn == i)System.out.println("waiting for i ");
-                    main.jobQ.poll();//this is the critical task
+                    while(read.flag[i] && read.turn == i)System.out.println("waiting for i ");
+                    read.jobQ.poll();//this is the critical task
                     
                     readyQ.add(pcb);
                 }
@@ -37,7 +37,7 @@ public class ready implements Runnable{
 
 
 
-            main.flag[j] = false;
+            read.flag[j] = false;
         }
     }
 
