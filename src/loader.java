@@ -1,8 +1,9 @@
 import java.io.File;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
-import java.util.concurrent.ConcurrentLinkedQueue;
-public class read implements Runnable{
+public class loader implements Runnable{
     // reading from job.txt file 
     //creates PCB and put them in the job queue
 
@@ -18,7 +19,7 @@ public class read implements Runnable{
     //user chose with one (3 types -FCFS -RR -priority scheduling)
 
 
-    public static ConcurrentLinkedQueue<PCB> jobQ = new ConcurrentLinkedQueue<>();
+    public static Queue<PCB> jobQ = new LinkedList<>();
 
     public static boolean[] flag = new boolean[2];
     public static int turn;
@@ -26,10 +27,10 @@ public class read implements Runnable{
     int i = 0;
     int j = 1;
 
-    ConcurrentLinkedQueue<PCB> readyQ; //to take a job from jobQueue wich has list of pcb
+    Queue<PCB> readyQ; //to take a job from jobQueue wich has list of pcb
 
 
-    public read( ConcurrentLinkedQueue<PCB> readyQ){
+    public loader( Queue<PCB> readyQ){
    
         this.readyQ = readyQ;
     }
@@ -47,7 +48,10 @@ public class read implements Runnable{
 
                 flag[i] = true;
                 turn = j;
-
+                // System.out.println("entering wait");
+                while(flag[j] && turn == j){
+                    System.out.println("waiting for j");
+                }
 
                 String data = reader.nextLine();
                 int splitted[] = Arrays.stream(data.split("[:;]"))
@@ -55,10 +59,7 @@ public class read implements Runnable{
                                         .toArray();
                 PCB pcb = new PCB(splitted[0], splitted[1], splitted[2], splitted[3]);
 
-                // System.out.println("entering wait");
-                while(flag[j] && turn == j){
-                    System.out.println("waiting for j");
-                }
+
                 // System.out.println("exiting wait");
                 jobQ.add(pcb);//this is the critical task
 

@@ -1,4 +1,5 @@
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 
 
@@ -8,12 +9,12 @@ public class ready implements Runnable{
     //loading jobs only if enough memory 
 
     int memory = 512;
-    public static ConcurrentLinkedQueue<PCB> readyQ; //to take a job from jobQueue wich has list of pcb
+    public static Queue<PCB> readyQ; //to take a job from jobQueue wich has list of pcb
     int i = 0;
     int j = 1;
     
     public ready(){
-        this.readyQ = new ConcurrentLinkedQueue<>();
+        this.readyQ = new LinkedList<>();
     
     }
 
@@ -21,15 +22,15 @@ public class ready implements Runnable{
         System.out.println("starting the thread");
 
         while(true){
-            read.flag[j] = true;
-            read.turn = i;
-
+            loader.flag[j] = true;
+            loader.turn = i;
+            while(loader.flag[i] && loader.turn == i)System.out.println("waiting for i ");
           
-            if(read.jobQ.peek() != null){
-                PCB pcb = new PCB(read.jobQ.peek());
+            if(loader.jobQ.peek() != null){
+                PCB pcb = new PCB(loader.jobQ.peek());
                 if (pcb.memRequired <= this.memory){
-                    while(read.flag[i] && read.turn == i)System.out.println("waiting for i ");
-                    read.jobQ.poll();//this is the critical task
+                   
+                    loader.jobQ.poll();//this is the critical task
                     
                     readyQ.add(pcb);
                 }
@@ -37,7 +38,12 @@ public class ready implements Runnable{
 
 
 
-            read.flag[j] = false;
+            loader.flag[j] = false;
+
+            if(loader.jobQ.isEmpty()){
+                System.out.println("job queue is empty");
+                break;
+            }
         }
     }
 

@@ -11,11 +11,18 @@ public class main {
 
     public static void main(String[] args) {
 
-        
+        Thread loaderThread = new Thread(new loader(ready.readyQ));
+        Thread readyThread = new Thread(new ready());
 
+        loaderThread.start();
+        readyThread.start();   
 
-
-
+        try {
+            loaderThread.join();
+            readyThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
 
