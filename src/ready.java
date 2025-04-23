@@ -1,4 +1,5 @@
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 
 
@@ -12,7 +13,7 @@ public class ready implements Runnable{
 
     
     public ready(){
-        this.readyQ = new ConcurrentLinkedQueue<>();
+        this.readyQ = new LinkedList<>();
     
     }
 
