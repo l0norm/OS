@@ -45,27 +45,12 @@ public class read implements Runnable{
           
             while(reader.hasNextLine()){
 
-                flag[i] = true;
-                turn = j;
-
-
                 String data = reader.nextLine();
                 int splitted[] = Arrays.stream(data.split("[:;]"))
                                         .mapToInt(Integer::parseInt)
                                         .toArray();
                 PCB pcb = new PCB(splitted[0], splitted[1], splitted[2], splitted[3]);
-
-                // System.out.println("entering wait");
-                while(flag[j] && turn == j){
-                    System.out.println("waiting for j");
-                }
-                // System.out.println("exiting wait");
                 jobQ.add(pcb);//this is the critical task
-
-
-
-
-                flag[i] = false;
             }
         }catch(Exception e){
             System.out.println("error: " + e.getMessage());
