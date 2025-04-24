@@ -45,28 +45,11 @@ public class loader implements Runnable{
             reader = new Scanner(obj);
           
             while(reader.hasNextLine()){
-
-<<<<<<< HEAD:src/read.java
-=======
-                flag[i] = true;
-                turn = j;
-                // System.out.println("entering wait");
-                while(flag[j] && turn == j){
-                    System.out.println("waiting for j");
-                }
-
->>>>>>> c0a588764699a069f83021550a04bed2992a77a9:src/loader.java
                 String data = reader.nextLine();
                 int splitted[] = Arrays.stream(data.split("[:;]"))
                                         .mapToInt(Integer::parseInt)
                                         .toArray();
                 PCB pcb = new PCB(splitted[0], splitted[1], splitted[2], splitted[3]);
-<<<<<<< HEAD:src/read.java
-=======
-
-
-                // System.out.println("exiting wait");
->>>>>>> c0a588764699a069f83021550a04bed2992a77a9:src/loader.java
                 jobQ.add(pcb);//this is the critical task
             }
         }catch(Exception e){

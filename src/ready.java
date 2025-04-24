@@ -1,6 +1,4 @@
-import java.util.LinkedList;
-import java.util.Queue;
-
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class ready implements Runnable{
@@ -13,7 +11,7 @@ public class ready implements Runnable{
 
     
     public ready(){
-        this.readyQ = new LinkedList<>();
+        this.readyQ = new ConcurrentLinkedQueue<>();
     
     }
 
@@ -22,10 +20,10 @@ public class ready implements Runnable{
 
         while(true){
 
-            if(read.jobQ.peek() != null){
-                PCB pcb = new PCB(read.jobQ.peek());
+            if(loader.jobQ.peek() != null){
+                PCB pcb = new PCB(loader.jobQ.peek());
                 if (pcb.memRequired <= this.memory){
-                    read.jobQ.poll();
+                    loader.jobQ.poll();
                     readyQ.add(pcb);
                 }
             }

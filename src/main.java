@@ -5,7 +5,7 @@ public class main {
 
     public static void main(String[] args) {
 
-        Thread readThread = new Thread(new read(ready.readyQ));
+        Thread readThread = new Thread(new loader(ready.readyQ));
         Thread readyThread = new Thread(new ready());
         readThread.start();
         readyThread.start();
@@ -22,7 +22,7 @@ public class main {
                     StringBuilder burstTimeEnd = new StringBuilder("0");
                     int totalBurstTime = 0;
                     while(!ready.readyQ.isEmpty()){
-                        PCB pcb = new PCB(ready.readyQ.peek());
+                        PCB pcb = new PCB(ready.readyQ.poll());
                         totalBurstTime+=pcb.burstTime;
                         chart.append("+").append("-".repeat(pcb.burstTime));
                         processID.append("|").append(" ".repeat(pcb.burstTime));
@@ -47,7 +47,7 @@ public class main {
                             pcb.burstTime = 0;
                             
                         }else{
-                            ready.readyQ.add(pcb);
+                            ready.readyQ.add(pcb); //adding it again if there is still burst time for the process
                             bursted = quantum;
                         }
                         totalBurstTime+=bursted;
@@ -61,14 +61,26 @@ public class main {
             case "priorityScheduling":
                 {
                   
-
-
-
-
-
-
-
-
+                    StringBuilder chart = new StringBuilder();
+                    StringBuilder processID = new StringBuilder();
+                    StringBuilder burstTimeEnd = new StringBuilder("0");
+                    int totalBurstTime = 0;
+                    while(!ready.readyQ.isEmpty()){
+                        ready.readyQ.stream()
+                            .sorted((p1, p2) -> Integer.compare(p1.priority, p2.priority))
+                            .forEach(ready.readyQ::add); // ths to sort the heap for its priority
+                        PCB pcb = new PCB(ready.readyQ.poll());
+                        pcb.burstTime -= 1;
+                        if(pcb.burstTime <= 0){
+                        }else{
+                            ready.readyQ.add(pcb);
+                        }
+              
+                        totalBurstTime+=1;
+                        chart.append("+").append("-".repeat(pcb.burstTime));
+                        processID.append("|").append(" ".repeat(pcb.burstTime));
+                        burstTimeEnd.append(" ".repeat(pcb.burstTime)).append(totalBurstTime);
+                    }       break;
 
                 }
             default:
