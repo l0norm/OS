@@ -1,14 +1,13 @@
 
 public class PCB {
-    
     int processID;
     int burstTime;
     int priority;
     int memRequired;
+    State state;
 
     int processWaitingTime;
     int processTurnaroundTime;
-
 
     public PCB(PCB pcb){
         pcb.processID = processID;
