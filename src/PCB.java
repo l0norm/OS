@@ -10,10 +10,10 @@ public class PCB {
     int processTurnaroundTime;
 
     public PCB(PCB pcb){
-        pcb.processID = processID;
-        pcb.burstTime = burstTime;
-        pcb.priority = priority;
-        pcb.memRequired = memRequired;
+        this.processID = pcb.processID;
+        this.burstTime = pcb.burstTime;
+        this.priority = pcb.priority;
+        this.memRequired = pcb.memRequired;
     }
     
     public PCB(int processID, int burstTime, int priority, int memRequired){

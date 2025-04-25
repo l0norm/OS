@@ -6,13 +6,10 @@ public class Ready implements Runnable{
 
     public void run(){
         PCB pcb;
-        while((pcb = Loader.jobQ.peek()) != null){
-                if (pcb.memRequired <= Main.memoryAvailable){
-                    Main.addMemory(-pcb.memRequired);
-                    Loader.jobQ.poll();
-                    readyQ.add(pcb);
-                }
-           
+        while((pcb = Loader.waitingQ.peek()) != null && pcb.memRequired <= Main.getMemory()){
+            Main.addMemory(-pcb.memRequired);
+            Loader.waitingQ.poll();
+            readyQ.add(pcb);
         }
     }
 
