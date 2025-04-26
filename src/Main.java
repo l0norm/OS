@@ -95,7 +95,7 @@ public class Main {
                 
                     for (PCB p : Ready.readyQ) {
                         if (p.processStarvation > Ready.readyQ.size()) {
-                            p.priority = 0;
+                            p.priority = 9;
 
                         }
                     }
