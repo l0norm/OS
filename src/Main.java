@@ -81,18 +81,25 @@ public class Main {
                 }
                 break;
             case PS:
-                while(!Ready.readyQ.isEmpty()){
+                while(!Ready.readyQ.isEmpty()){                
                     Ready.readyQ.stream()
                         .sorted((p1, p2) -> Integer.compare(p1.priority, p2.priority))
                         .forEach(Ready.readyQ::add); // ths to sort the heap for its priority
                     PCB pcb = new PCB(Ready.readyQ.poll());
+                    Ready.processStarvationincrement();
+                    if (pcb.processStarvation > 1) {
+                        System.out.println("Process " + pcb.processID + " has been starved");
+                    }
+                    
+                    int startTime = totalBurstTime;
+                    int endTime = startTime + pcb.burstTime;
                     totalBurstTime += pcb.burstTime;
                     pcb.processTurnaroundTime = totalBurstTime;
                     pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
 
                     Main.addMemory(pcb.memRequired);
                     processMap.put(pcb.processID, pcb);
-                    ScheduleTable.add(new ScheduleRow(pcb.processID, totalBurstTime - pcb.burstTime, totalBurstTime, pcb.burstTime));
+                    ScheduleTable.add(new ScheduleRow(pcb.processID, startTime, endTime, pcb.burstTime));
 
                     // chart.append("+").append("-".repeat(pcb.burstTime));
                     // processIDs.append("|").append(" ".repeat(pcb.burstTime));
@@ -101,7 +108,7 @@ public class Main {
                 break;
         }
 
-        // Print the Gantt chart in rows of 20 units
+   
         
         
         try{

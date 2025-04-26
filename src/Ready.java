@@ -13,4 +13,10 @@ public class Ready implements Runnable{
         }
     }
 
+    public static void processStarvationincrement(){
+        for (PCB pcb : readyQ) {
+            pcb.processStarvation++;
+        }
+    }
+
 }
