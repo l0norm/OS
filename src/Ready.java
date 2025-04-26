@@ -38,13 +38,17 @@ public class Ready implements Runnable{
     }
     public void run(){
         PCB pcb;
-        while((pcb = Loader.waitingQ.peek()) != null && pcb.memRequired <= Main.getMemory()){
-            Main.addMemory(-pcb.memRequired);
-            Loader.waitingQ.poll();
-            synchronized (mutex) {
-                readyQ.add(pcb);
-                pcb.processDegreeTime = readyQ.size();
+        while((pcb = Loader.waitingQ.peek()) != null){
+            if (pcb.memRequired < Main.getMemory()) {
+                Main.addMemory(-pcb.memRequired);
+                Loader.waitingQ.poll();
+                synchronized (mutex) {
+                    readyQ.add(pcb);
+                    pcb.processDegreeTime = readyQ.size();
+                    pcb.arrivalTime = Main.getBurstTime();
+                }
             }
+
         }
     }
     public static void processStarvationincrement(){

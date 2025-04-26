@@ -11,6 +11,9 @@ public class PCB {
     int processStarvation;
     int processDegreeTime;
 
+    int arrivalTime;
+    int endTime;
+
     public PCB(PCB pcb) {
         this.processID = pcb.processID;
         this.burstTime = pcb.burstTime;

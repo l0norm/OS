@@ -2,7 +2,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 public class Main {
     public static int memoryAvailable = 2048;
-    public static Algorithms algType=Algorithms.PS;
+    public static Algorithms algType=Algorithms.FCFS;
+    public static int totalBurstTime = 0;
     
 
     public synchronized static void addMemory(int amt){
@@ -10,6 +11,13 @@ public class Main {
     }
     public synchronized static int getMemory(){
         return memoryAvailable;
+    }
+
+    public synchronized static void addBurstTime(int amt){
+        totalBurstTime+=amt;
+    }
+    public synchronized static int getBurstTime(){
+        return totalBurstTime;
     }
 
     public static void main(String[] args) {
@@ -30,23 +38,24 @@ public class Main {
         StringBuilder burstTimeEnd = new StringBuilder("0");
         LinkedList<ScheduleRow> ScheduleTable = new LinkedList<>();
         HashMap<Integer, PCB> processMap = new HashMap<>();
-        int totalBurstTime = 0;
+  
         
         System.out.println("Starting scheduling:");
         switch (algType) {
             case FCFS:
+                System.out.println("FCFS Scheduling");
                 while (!Ready.readyQ.isEmpty()) {
                     PCB pcb = new PCB(Ready.pollFromReadyQ());
-                    int startTime = totalBurstTime;
-                    int endTime = startTime + pcb.burstTime;
+                    
+                    int endTime = getBurstTime() + pcb.burstTime;
 
                     totalBurstTime+=pcb.burstTime;
-                    pcb.processTurnaroundTime=totalBurstTime;
+                    pcb.processTurnaroundTime=endTime - pcb.arrivalTime;
                     pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
 
                     addMemory(pcb.memRequired);
                     processMap.put(pcb.processID, pcb);
-                    ScheduleTable.add(new ScheduleRow(pcb.processID, startTime, endTime, pcb.burstTime));
+                    ScheduleTable.add(new ScheduleRow(pcb.processID, pcb.arrivalTime, endTime, pcb.burstTime));
 
                     String processSpaces = "P" + pcb.processID;
                     String burstSpaces = String.valueOf(totalBurstTime);
