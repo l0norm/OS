@@ -3,7 +3,7 @@ import java.util.LinkedList;
 import java.util.stream.Collectors;
 public class Main {
     public static int memoryAvailable = 2048;
-    public static Algorithms algType=Algorithms.RR;
+    public static Algorithms algType=Algorithms.PS;
     
 
     public synchronized static void addMemory(int amt){
@@ -90,20 +90,26 @@ public class Main {
             case PS:
                 while(!Ready.readyQ.isEmpty()){                
                     Ready.readyQ = Ready.readyQ.stream()
-                    .sorted((p1, p2) -> Integer.compare(p1.priority, p2.priority))
+                    .sorted((p1, p2) -> Integer.compare(p2.priority, p1.priority))
                     .collect(Collectors.toCollection(LinkedList::new)); // Replace readyQ with the sorted list
-                
+                    
                     for (PCB p : Ready.readyQ) {
-                        if (p.processStarvation > Ready.readyQ.size()) {
+                        if (p.processStarvation > p.processDegreeTime) {
                             p.priority = 9;
-
+                        }
+                    }
+                    
+                    for (PCB p : Ready.readyQ) {
+                        if (p.processStarvation == 9) {
+                            System.out.println("starvation:" + p.processID);
                         }
                     }
                     Ready.readyQ = Ready.readyQ.stream()
-                    .sorted((p1, p2) -> Integer.compare(p1.priority, p2.priority))
+                    .sorted((p1, p2) -> Integer.compare(p2.priority, p1.priority))
                     .collect(Collectors.toCollection(LinkedList::new));
 
                     PCB pcb = new PCB(Ready.readyQ.poll());
+                    pcb.processDegreeTime = Ready.readyQ.size();
                     Ready.processStarvationincrement();
                     
                     int startTime = totalBurstTime;
@@ -155,8 +161,10 @@ public class Main {
         System.out.printf("Average turnaround time: %.2f%n", totalTurnaroundTime / processMap.size());
 
         processIDs.append("|");
-        int rowLength = 50 * 3; 
+        int rowLength = 51 * 3; 
         int length = chart.length();
+
+
 
         for (int i = 0; i < length; i += rowLength) {
             int end = Math.min(i + rowLength, length);

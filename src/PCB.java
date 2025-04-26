@@ -9,6 +9,7 @@ public class PCB {
     int processTurnaroundTime;
     int processRemainingBurstTime;
     int processStarvation;
+    int processDegreeTime;
 
     public PCB(PCB pcb) {
         this.processID = pcb.processID;
@@ -29,6 +30,7 @@ public class PCB {
         this.memRequired = memRequired;
         this.processRemainingBurstTime = burstTime; 
         this.processStarvation = 0;
+        this.processDegreeTime = 0;
     }
 
 
