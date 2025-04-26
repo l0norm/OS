@@ -1,6 +1,5 @@
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.stream.Collectors;
 public class Main {
     public static int memoryAvailable = 2048;
     public static Algorithms algType=Algorithms.PS;
@@ -37,7 +36,7 @@ public class Main {
         switch (algType) {
             case FCFS:
                 while (!Ready.readyQ.isEmpty()) {
-                    PCB pcb = new PCB(Ready.readyQ.poll());
+                    PCB pcb = new PCB(Ready.pollFromReadyQ());
                     int startTime = totalBurstTime;
                     int endTime = startTime + pcb.burstTime;
 
@@ -45,7 +44,7 @@ public class Main {
                     pcb.processTurnaroundTime=totalBurstTime;
                     pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
 
-                    Main.addMemory(pcb.memRequired);
+                    addMemory(pcb.memRequired);
                     processMap.put(pcb.processID, pcb);
                     ScheduleTable.add(new ScheduleRow(pcb.processID, startTime, endTime, pcb.burstTime));
 
@@ -61,8 +60,8 @@ public class Main {
 
             case RR:
                 int quantum = 4;
-                while (!Ready.readyQ.isEmpty()){
-                    PCB pcb = new PCB(Ready.readyQ.poll());
+                while (!Ready.isReadyQEmpty()){
+                    PCB pcb = new PCB(Ready.pollFromReadyQ());
                     int startTime = totalBurstTime;
                     int endTime = startTime + pcb.burstTime;
                     int bursted = Math.min(pcb.processRemainingBurstTime, quantum);
@@ -70,9 +69,9 @@ public class Main {
                     totalBurstTime += bursted;
 
                     if (pcb.processRemainingBurstTime > 0) {
-                        Ready.readyQ.add(pcb); // Add back to the queue if not finished
+                        Ready.addToReadyQ(pcb);// Add back to the queue if not finished
                     } else {
-                        Main.addMemory(pcb.memRequired);
+                        addMemory(pcb.memRequired);
                         pcb.processTurnaroundTime = totalBurstTime;
                         pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
                         processMap.put(pcb.processID, pcb);
@@ -88,10 +87,8 @@ public class Main {
                 }
                 break;
             case PS:
-                while(!Ready.readyQ.isEmpty()){                
-                    Ready.readyQ = Ready.readyQ.stream()
-                    .sorted((p1, p2) -> Integer.compare(p2.priority, p1.priority))
-                    .collect(Collectors.toCollection(LinkedList::new)); // Replace readyQ with the sorted list
+                while(!Ready.isReadyQEmpty()){                
+                    Ready.sortReadyQ();
                     
                     for (PCB p : Ready.readyQ) {
                         if (p.processStarvation > p.processDegreeTime) {
@@ -104,12 +101,10 @@ public class Main {
                             System.out.println("starvation:" + p.processID);
                         }
                     }
-                    Ready.readyQ = Ready.readyQ.stream()
-                    .sorted((p1, p2) -> Integer.compare(p2.priority, p1.priority))
-                    .collect(Collectors.toCollection(LinkedList::new));
+                    Ready.sortReadyQ();
 
-                    PCB pcb = new PCB(Ready.readyQ.poll());
-                    pcb.processDegreeTime = Ready.readyQ.size();
+                    PCB pcb = new PCB(Ready.pollFromReadyQ());
+                    
                     Ready.processStarvationincrement();
                     
                     int startTime = totalBurstTime;
