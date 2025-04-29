@@ -1,11 +1,12 @@
 import java.util.HashMap;
-import java.util.LinkedList;
-public class Main {
-    public static int memoryAvailable = 2048;
-    public static Algorithms algType=Algorithms.FCFS;
-    public static int totalBurstTime = 0;
-    
+import java.util.Scanner;
 
+public class Main {
+    private static int memoryAvailable = 2048;
+    private static int time = 0;
+    public static Algorithms algType=Algorithms.PS;
+    public static HashMap<Integer, PCB> pcbMap = new HashMap<>();
+    
     public synchronized static void addMemory(int amt){
         memoryAvailable+=amt;
     }
@@ -13,14 +14,26 @@ public class Main {
         return memoryAvailable;
     }
 
-    public synchronized static void addBurstTime(int amt){
-        totalBurstTime+=amt;
+    public synchronized static void addTime(int amt){
+        time+=amt;
     }
-    public synchronized static int getBurstTime(){
-        return totalBurstTime;
+    public synchronized static int getTime(){
+        return time;
     }
 
+
     public static void main(String[] args) {
+        System.out.println("Enter alg choice:\n1) FCFS (default)\n2) RR\n3) PS");
+        try (Scanner input = new Scanner(System.in)) {
+            switch (input.nextInt()) {
+                case 1: algType = Algorithms.FCFS; break;
+                case 2: algType = Algorithms.RR; break;
+                case 3: algType = Algorithms.PS; break;
+                default: algType = Algorithms.PS; break;
+            }
+        }
+     
+        
         Thread loadThread = new Thread(new Loader());
         Thread readyThread = new Thread(new Ready());
 
@@ -36,155 +49,128 @@ public class Main {
         StringBuilder chart = new StringBuilder();
         StringBuilder processIDs = new StringBuilder();
         StringBuilder burstTimeEnd = new StringBuilder("0");
-        LinkedList<ScheduleRow> ScheduleTable = new LinkedList<>();
-        HashMap<Integer, PCB> processMap = new HashMap<>();
-  
         
-        System.out.println("Starting scheduling:");
         switch (algType) {
             case FCFS:
-                System.out.println("FCFS Scheduling");
-                while (!Ready.readyQ.isEmpty()) {
-                    PCB pcb = new PCB(Ready.pollFromReadyQ());
-                    
-                    int endTime = getBurstTime() + pcb.burstTime;
+                while (!Loader.waitingQ.isEmpty()) {
+                    while (!Ready.syncEmpty()) {
+                        PCB pcb = new PCB(Ready.syncPoll());
+                        
+                        SystemCalls.SetProcessState(State.RUNNING, pcb);
+                        
+                        addTime(pcb.burstTime);
+                        pcb.exitTime = getTime();
 
-                    totalBurstTime+=pcb.burstTime;
-                    pcb.processTurnaroundTime=endTime - pcb.arrivalTime;
-                    pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
+                        SystemCalls.SetProcessState(State.TERMINATED, pcb);
+                        
+                        addMemory(pcb.memRequired);
+                        pcbMap.put(pcb.processID, pcb);
 
-                    addMemory(pcb.memRequired);
-                    processMap.put(pcb.processID, pcb);
-                    ScheduleTable.add(new ScheduleRow(pcb.processID, pcb.arrivalTime, endTime, pcb.burstTime));
-
-                    String processSpaces = "P" + pcb.processID;
-                    String burstSpaces = String.valueOf(totalBurstTime);
-                    chart.append("+").append("-".repeat(pcb.burstTime*3));
-                    processIDs.append("|").append(processSpaces).append(" ".repeat(pcb.burstTime*3 - processSpaces.length()));
-                    burstTimeEnd.append(" ".repeat(pcb.burstTime*3 - burstSpaces.length() +1)).append(totalBurstTime);
-
-
+                        String processSpaces = "P" + pcb.processID;
+                        String burstSpaces = String.valueOf(getTime());
+                        chart.append("+").append("-".repeat(pcb.burstTime*3));
+                        processIDs.append("|").append(processSpaces).append(" ".repeat(pcb.burstTime*3 - processSpaces.length()));
+                        burstTimeEnd.append(" ".repeat(pcb.burstTime*3 - burstSpaces.length() +1)).append(getTime());
+                    }
                 }
                 break;
-
             case RR:
-                int quantum = 4;
-                while (!Ready.isReadyQEmpty()){
-                    PCB pcb = new PCB(Ready.pollFromReadyQ());
-                    int startTime = totalBurstTime;
-                    int endTime = startTime + pcb.burstTime;
-                    int bursted = Math.min(pcb.processRemainingBurstTime, quantum);
-                    pcb.processRemainingBurstTime -= bursted;
-                    totalBurstTime += bursted;
+                int quantum = 7;
+                while (!Loader.waitingQ.isEmpty()) {
+                    while (!Ready.syncEmpty()){
+                        PCB pcb = new PCB(Ready.syncPoll());
 
-                    if (pcb.processRemainingBurstTime > 0) {
-                        Ready.addToReadyQ(pcb);// Add back to the queue if not finished
-                    } else {
-                        addMemory(pcb.memRequired);
-                        pcb.processTurnaroundTime = totalBurstTime;
-                        pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
-                        processMap.put(pcb.processID, pcb);
+                        SystemCalls.SetProcessState(State.RUNNING, pcb);
+
+                        int bursted = Math.min(pcb.processRemainingBurstTime, quantum);
+                        pcb.processRemainingBurstTime -= bursted;
+                        addTime(bursted);
+
+                        if (pcb.processRemainingBurstTime > 0) {
+                            SystemCalls.SetProcessState(State.READY, pcb);
+                            Ready.syncAdd(pcb);
+                        } else {
+                            pcb.exitTime = getTime();
+                            SystemCalls.SetProcessState(State.TERMINATED, pcb);
+                            addMemory(pcb.memRequired);
+                            pcbMap.put(pcb.processID, pcb);
+                        }
+
+                        String processSpaces = "P" + pcb.processID;
+                        String burstSpaces = String.valueOf(getTime());
+                        chart.append("+").append("-".repeat(pcb.burstTime*3));
+                        processIDs.append("|").append(processSpaces).append(" ".repeat(pcb.burstTime*3 - processSpaces.length()));
+                        burstTimeEnd.append(" ".repeat(pcb.burstTime*3 - burstSpaces.length() +1)).append(getTime());
                     }
-
-                    ScheduleTable.add(new ScheduleRow(pcb.processID, startTime, endTime, bursted));
-
-                    String processSpaces = "P" + pcb.processID;
-                    String burstSpaces = String.valueOf(totalBurstTime);
-                    chart.append("+").append("-".repeat(pcb.burstTime*3));
-                    processIDs.append("|").append(processSpaces).append(" ".repeat(pcb.burstTime*3 - processSpaces.length()));
-                    burstTimeEnd.append(" ".repeat(pcb.burstTime*3 - burstSpaces.length() +1)).append(totalBurstTime);
                 }
                 break;
             case PS:
-                while(!Ready.isReadyQEmpty()){                
-                    Ready.sortReadyQ();
-                    
-                    for (PCB p : Ready.readyQ) {
-                        if (p.processStarvation > p.processDegreeTime) {
-                            p.priority = 9;
-                        }
+                while (!Loader.waitingQ.isEmpty()) {
+                    while(!Ready.syncEmpty()) { 
+                        Ready.syncSort();
+
+                        PCB pcb = new PCB(Ready.syncPoll());
+
+                        SystemCalls.SetProcessState(State.RUNNING, pcb);
+                        
+                        Ready.processStarvationIncrement();
+
+                        addTime(pcb.burstTime);
+                        pcb.exitTime = getTime();
+
+                        SystemCalls.SetProcessState(State.TERMINATED, pcb);
+                        
+                        addMemory(pcb.memRequired);
+                        pcbMap.put(pcb.processID, pcb);
+
+                        String processSpaces = "P" + pcb.processID;
+                        String burstSpaces = String.valueOf(getTime());
+                        chart.append("+").append("-".repeat(pcb.burstTime*3));
+                        processIDs.append("|").append(processSpaces).append(" ".repeat(pcb.burstTime*3 - processSpaces.length()));
+                        burstTimeEnd.append(" ".repeat(pcb.burstTime*3 - burstSpaces.length() +1)).append(getTime());
                     }
-                    
-                    for (PCB p : Ready.readyQ) {
-                        if (p.processStarvation == 9) {
-                            System.out.println("starvation:" + p.processID);
-                        }
-                    }
-                    Ready.sortReadyQ();
-
-                    PCB pcb = new PCB(Ready.pollFromReadyQ());
-                    
-                    Ready.processStarvationincrement();
-                    
-                    int startTime = totalBurstTime;
-                    int endTime = startTime + pcb.burstTime;
-                    totalBurstTime += pcb.burstTime;
-                    pcb.processTurnaroundTime = totalBurstTime;
-                    pcb.processWaitingTime = pcb.processTurnaroundTime - pcb.burstTime;
-
-                    Main.addMemory(pcb.memRequired);
-                    processMap.put(pcb.processID, pcb);
-                    ScheduleTable.add(new ScheduleRow(pcb.processID, startTime, endTime, pcb.burstTime));
-
-
-                    String processSpaces = "P" + pcb.processID;
-                    String burstSpaces = String.valueOf(totalBurstTime);
-                    chart.append("+").append("-".repeat(pcb.burstTime*3));
-                    processIDs.append("|").append(processSpaces).append(" ".repeat(pcb.burstTime*3 - processSpaces.length()));
-                    burstTimeEnd.append(" ".repeat(pcb.burstTime*3 - burstSpaces.length() +1)).append(totalBurstTime);
                 }
                 break;
         }
 
-   
-        
-        
         try{
             readyThread.join();
         } catch (InterruptedException e) {
             System.err.println("Could not join ready thread: "+e);
         }
 
-        System.out.println("Process ID  | Start Time | End Time | Burst Time ");
+        System.out.println("Process ID   |Arrival Time| Exit Time| Burst Time ");
         System.out.println("---------------------------------------------------------------");
-        for (ScheduleRow row : ScheduleTable) {
-            System.out.printf("%-12d | %-10d | %-8d | %-9d%n", row.processID, row.startTime, row.endTime, row.burstTime);
+        for (PCB pcb : pcbMap.values()) {
+            System.out.printf("%-12d | %-10d | %-8d | %-9d%n", pcb.processID, pcb.arrivalTime, pcb.exitTime, pcb.burstTime);
         }
         System.out.println("---------------------------------------------------------------");
-        System.out.println("Process ID   |waiting time| TurnAroundTime" );
-        for (PCB pcb : processMap.values()) {
-            System.out.printf("%-12d | %-10d | %-18d%n", pcb.processID, pcb.processWaitingTime, pcb.processTurnaroundTime);
+        System.out.println(); System.out.println(); System.out.println();
+        System.out.println("Process ID   | Waiting Time | Turnaround Time" );
+        System.out.println("---------------------------------------------------------------");
+        for (PCB pcb : pcbMap.values()) {
+            System.out.printf("%-12d | %-12d | %-18d%n", pcb.processID, pcb.exitTime-pcb.arrivalTime-pcb.burstTime, pcb.exitTime-pcb.arrivalTime);
         }
         System.out.println("---------------------------------------------------------------");
         double totalWaitingTime = 0, totalTurnaroundTime = 0;
-        for (PCB pcb : processMap.values()) {
-            totalWaitingTime += pcb.processWaitingTime;
-            totalTurnaroundTime += pcb.processTurnaroundTime;
+        for (PCB pcb : pcbMap.values()) {
+            totalTurnaroundTime += pcb.exitTime-pcb.arrivalTime;
+            totalWaitingTime += pcb.exitTime-pcb.arrivalTime-pcb.burstTime;
         }
-        System.out.printf("Average waiting time: %.2f%n", totalWaitingTime / processMap.size());
-        System.out.printf("Average turnaround time: %.2f%n", totalTurnaroundTime / processMap.size());
+        System.out.printf("Average waiting time: %.2f%n", totalWaitingTime / pcbMap.size());
+        System.out.printf("Average turnaround time: %.2f%n", totalTurnaroundTime / pcbMap.size());
 
         processIDs.append("|");
         int rowLength = 51 * 3; 
         int length = chart.length();
 
 
-
         for (int i = 0; i < length; i += rowLength) {
             int end = Math.min(i + rowLength, length);
 
-      
             System.out.println(chart.substring(i, end));
             System.out.println(processIDs.substring(i, end));
             System.out.println(burstTimeEnd.substring(i, end));
         }
-
-        
-        // System.out.println(chart.append("+"));
-        // System.out.println(processIDs.append("|"));
-        // System.out.println(burstTimeEnd);
-
     }
-
-
 }

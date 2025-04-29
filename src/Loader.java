@@ -17,7 +17,7 @@ public class Loader implements Runnable{
                 int splitted[] = Arrays.stream(line.split("[:;]"))
                                         .mapToInt(Integer::parseInt)
                                         .toArray();
-                waitingQ.add(SystemCalls.CreateProcess(splitted[0], splitted[1], splitted[2], splitted[3]));
+                waitingQ.add(SystemCalls.CreateProcess(splitted[0], splitted[1], splitted[2], splitted[3], State.NEW));
             }
         } catch (Exception e){
             System.out.println("error: " + e.getMessage());

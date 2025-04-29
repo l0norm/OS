@@ -5,35 +5,35 @@ public class PCB {
     int memRequired;
     State state;
 
-    int processWaitingTime;
-    int processTurnaroundTime;
     int processRemainingBurstTime;
-    int processStarvation;
-    int processDegreeTime;
+    int processStarvation = 0;
+    int processDegree = 0;
 
     int arrivalTime;
-    int endTime;
+    int exitTime;
 
     public PCB(PCB pcb) {
         this.processID = pcb.processID;
         this.burstTime = pcb.burstTime;
         this.priority = pcb.priority;
         this.memRequired = pcb.memRequired;
+        this.state = pcb.state;
 
-        this.processTurnaroundTime = pcb.processTurnaroundTime;
-        this.processWaitingTime = pcb.processWaitingTime;
         this.processRemainingBurstTime = pcb.processRemainingBurstTime;
         this.processStarvation = pcb.processStarvation;
+        this.processDegree = pcb.processDegree;
+
+        this.arrivalTime = pcb.arrivalTime;
+        this.exitTime = pcb.exitTime;
     }
 
-    public PCB(int processID, int burstTime, int priority, int memRequired) {
+    public PCB(int processID, int burstTime, int priority, int memRequired, State state) {
         this.processID = processID;
         this.burstTime = burstTime;
         this.priority = priority;
         this.memRequired = memRequired;
+        this.state = state;
         this.processRemainingBurstTime = burstTime; 
-        this.processStarvation = 0;
-        this.processDegreeTime = 0;
     }
 
 
