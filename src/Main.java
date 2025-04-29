@@ -4,8 +4,9 @@ import java.util.Scanner;
 public class Main {
     private static int memoryAvailable = 2048;
     private static int time = 0;
+    private static final int quantum = 7;
     public static Algorithms algType=Algorithms.PS;
-    public static HashMap<Integer, PCB> pcbMap = new HashMap<>();
+    public static HashMap<Integer, PCB> terminatedProcesses = new HashMap<>();
     
     public synchronized static void addMemory(int amt){
         memoryAvailable+=amt;
@@ -32,7 +33,6 @@ public class Main {
                 default: algType = Algorithms.PS; break;
             }
         }
-     
         
         Thread loadThread = new Thread(new Loader());
         Thread readyThread = new Thread(new Ready());
@@ -50,10 +50,11 @@ public class Main {
         StringBuilder processIDs = new StringBuilder();
         StringBuilder burstTimeEnd = new StringBuilder("0");
         
+        // --- SCHEDULING --- //
         switch (algType) {
             case FCFS:
                 while (!Loader.waitingQ.isEmpty()) {
-                    while (!Ready.syncEmpty()) {
+                    while (!Ready.syncIsEmpty()) {
                         PCB pcb = new PCB(Ready.syncPoll());
                         
                         SystemCalls.SetProcessState(State.RUNNING, pcb);
@@ -64,7 +65,7 @@ public class Main {
                         SystemCalls.SetProcessState(State.TERMINATED, pcb);
                         
                         addMemory(pcb.memRequired);
-                        pcbMap.put(pcb.processID, pcb);
+                        terminatedProcesses.put(pcb.processID, pcb);
 
                         String processSpaces = "P" + pcb.processID;
                         String burstSpaces = String.valueOf(getTime());
@@ -75,9 +76,8 @@ public class Main {
                 }
                 break;
             case RR:
-                int quantum = 7;
                 while (!Loader.waitingQ.isEmpty()) {
-                    while (!Ready.syncEmpty()){
+                    while (!Ready.syncIsEmpty()){
                         PCB pcb = new PCB(Ready.syncPoll());
 
                         SystemCalls.SetProcessState(State.RUNNING, pcb);
@@ -93,7 +93,7 @@ public class Main {
                             pcb.exitTime = getTime();
                             SystemCalls.SetProcessState(State.TERMINATED, pcb);
                             addMemory(pcb.memRequired);
-                            pcbMap.put(pcb.processID, pcb);
+                            terminatedProcesses.put(pcb.processID, pcb);
                         }
 
                         String processSpaces = "P" + pcb.processID;
@@ -106,7 +106,7 @@ public class Main {
                 break;
             case PS:
                 while (!Loader.waitingQ.isEmpty()) {
-                    while(!Ready.syncEmpty()) { 
+                    while(!Ready.syncIsEmpty()) { 
                         Ready.syncSort();
 
                         PCB pcb = new PCB(Ready.syncPoll());
@@ -121,7 +121,7 @@ public class Main {
                         SystemCalls.SetProcessState(State.TERMINATED, pcb);
                         
                         addMemory(pcb.memRequired);
-                        pcbMap.put(pcb.processID, pcb);
+                        terminatedProcesses.put(pcb.processID, pcb);
 
                         String processSpaces = "P" + pcb.processID;
                         String burstSpaces = String.valueOf(getTime());
@@ -141,25 +141,27 @@ public class Main {
 
         System.out.println("Process ID   |Arrival Time| Exit Time| Burst Time ");
         System.out.println("---------------------------------------------------------------");
-        for (PCB pcb : pcbMap.values()) {
+        for (PCB pcb : terminatedProcesses.values()) {
             System.out.printf("%-12d | %-10d | %-8d | %-9d%n", pcb.processID, pcb.arrivalTime, pcb.exitTime, pcb.burstTime);
         }
         System.out.println("---------------------------------------------------------------");
         System.out.println(); System.out.println(); System.out.println();
         System.out.println("Process ID   | Waiting Time | Turnaround Time" );
         System.out.println("---------------------------------------------------------------");
-        for (PCB pcb : pcbMap.values()) {
+        for (PCB pcb : terminatedProcesses.values()) {
             System.out.printf("%-12d | %-12d | %-18d%n", pcb.processID, pcb.exitTime-pcb.arrivalTime-pcb.burstTime, pcb.exitTime-pcb.arrivalTime);
         }
         System.out.println("---------------------------------------------------------------");
         double totalWaitingTime = 0, totalTurnaroundTime = 0;
-        for (PCB pcb : pcbMap.values()) {
+        for (PCB pcb : terminatedProcesses.values()) {
             totalTurnaroundTime += pcb.exitTime-pcb.arrivalTime;
             totalWaitingTime += pcb.exitTime-pcb.arrivalTime-pcb.burstTime;
         }
-        System.out.printf("Average waiting time: %.2f%n", totalWaitingTime / pcbMap.size());
-        System.out.printf("Average turnaround time: %.2f%n", totalTurnaroundTime / pcbMap.size());
+        System.out.printf("Average waiting time: %.2f%n", totalWaitingTime / terminatedProcesses.size());
+        System.out.printf("Average turnaround time: %.2f%n\n", totalTurnaroundTime / terminatedProcesses.size());
 
+
+        // --- GANTT CHART --- //
         processIDs.append("|");
         int rowLength = 51 * 3; 
         int length = chart.length();

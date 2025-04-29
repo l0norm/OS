@@ -7,7 +7,7 @@ public class SystemCalls {
         return new PCB(pcb);        
     }
     public static PCB GetProcessInfo(int processID) {
-        return Main.pcbMap.get(processID);
+        return Main.terminatedProcesses.get(processID);
     }
     public static void SetProcessState(State s, PCB pcb){
         pcb.state=s;

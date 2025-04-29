@@ -26,7 +26,7 @@ public class Ready implements Runnable{
         }
     }
 
-    public static boolean syncEmpty(){
+    public static boolean syncIsEmpty(){
         synchronized(readyQMutex){
             return readyQ.isEmpty();
         }
